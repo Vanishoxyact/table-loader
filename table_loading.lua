@@ -88,6 +88,45 @@ function gmatchToVector(input, regex)
     return result;
 end
 
+--v function(masterDataTable: map<string, WHATEVER>, newDataTable: map<string, WHATEVER>, keyType: string)
+function mergeDataTables(masterDataTable, newDataTable, keyType)
+    for key, value in pairs(newDataTable) do
+        if keyType == "LIST" then
+            --# assume value: vector<map<string, string>>
+            local masterTableKeyTable = masterDataTable[key];
+            --# assume masterTableKeyTable: vector<map<string, string>>
+            if not masterTableKeyTable then
+                -- No need to merge vectors as not in master
+                masterDataTable[key] = value;
+            else
+                -- Merge new vector into master table
+                for i, newTableVectorValue in ipairs(value) do
+                    table.insert(masterTableKeyTable, newTableVectorValue);
+                end
+            end
+        else
+            -- Replace value in master table
+            masterDataTable[key] = value;
+        end
+    end
+end
+
+-- --v function(masterTable: map<string, WHATEVER>, newTable: map<string, WHATEVER>) --> boolean
+-- function validateTableSchemas(masterTable, newTable)
+--     for key, value in pairs(masterTable) do
+--         if key == "SCHEMA" or key == "KEY" then
+--             --# assume value: vector<string>
+--             for i, schemaKeyValue in ipairs(value) do
+--                 if not (newTable[key][i] == schemaKeyValue) then
+--                     output("Could not merge tables. " .. key .. " lists did not match.");
+--                     return false;
+--                 end
+--             end
+--         end
+--     end
+--     return true;
+-- end
+
 local game_interface = cm:get_game_interface();
 
 if not game_interface then
@@ -129,18 +168,24 @@ else
             for tableName, completeTable in pairs(fileContent) do
                 output("LOADING TABLE:" .. tableName);
                 local convertedTable = convertDataIntoTable(completeTable);
-                TABLES[tableName] = convertedTable;
-                -- TODO merge tables. If unique, add/replace entries, if list merge vectors
+                if not TABLES[tableName] then
+                    TABLES[tableName] = convertedTable;
+                else
+                    mergeDataTables(TABLES[tableName], convertedTable, completeTable["KEY"][2]);
+                end
             end
 		end
     end
     output("FINISHED LOADING TABLES");
+
     -- local testDataTable = TABLES["TEST_DATA"] --: map<string, map<string, string>>
     -- output("TEST_DATA");   
     -- output(testDataTable["One"]["value1"]);
     -- output(testDataTable["One"]["value2"]);
     -- output(testDataTable["Two"]["value1"]);
     -- output(testDataTable["Two"]["value2"]);
+    -- output(testDataTable["Three"]["value1"]);
+    -- output(testDataTable["Three"]["value2"]);
 
     -- local testDataListTable = TABLES["TEST_DATA_LIST"] --: map<string, vector<map<string, string>>>
     -- output("TEST_DATA_LIST ONE");    
@@ -152,6 +197,12 @@ else
     -- output("TEST_DATA_LIST TWO");        
     -- local testDataTwoRows = testDataListTable["Two"];
     -- for i, datarow in ipairs(testDataTwoRows) do
+    --     output(datarow["value1"]);
+    --     output(datarow["value2"]);
+    -- end
+    -- output("TEST_DATA_LIST THREE");        
+    -- local testDataThreeRows = testDataListTable["Three"];
+    -- for i, datarow in ipairs(testDataThreeRows) do
     --     output(datarow["value1"]);
     --     output(datarow["value2"]);
     -- end
