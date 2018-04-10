@@ -127,87 +127,89 @@ end
 --     return true;
 -- end
 
-local game_interface = cm:get_game_interface();
+function loadTables()
+    local game_interface = cm:get_game_interface();
 
-if not game_interface then
-    output("no game_interface");
-else
-    output("STARTED LOADING TABLES");
-    local file_str_c = game_interface:filesystem_lookup("/script/campaign/mod/tables", "*.lua");
-    output("TABLE FILES FOUND:" .. file_str_c);
+    if not game_interface then
+        output("no game_interface");
+    else
+        output("STARTED LOADING TABLES");
+        local file_str_c = game_interface:filesystem_lookup("/script/campaign/tables", "*.lua");
+        output("TABLE FILES FOUND:" .. file_str_c);
 
-    local TABLES = {} --: map<string, map<string, WHATEVER>>
-    if file_str_c ~= "" then
-        local matches = gmatchToVector(file_str_c, '([^,]+)');
-        for i, filename in ipairs(matches) do
-            output("LOADING TABLES FROM:" .. filename);
+        local TABLES = {} --: map<string, map<string, WHATEVER>>
+        if file_str_c ~= "" then
+            local matches = gmatchToVector(file_str_c, '([^,]+)');
+            for i, filename in ipairs(matches) do
+                output("LOADING TABLES FROM:" .. filename);
 
-            local current_file = filename;
-            local pointer = 1;
-            
-            while true do
-                local next_separator = string.find(current_file, "\\", pointer) or string.find(current_file, "/", pointer);
+                local current_file = filename;
+                local pointer = 1;
                 
-                if next_separator then
-                    pointer = next_separator + 1;
-                else
-                    if pointer > 1 then
-                        current_file = string.sub(current_file, pointer);
+                while true do
+                    local next_separator = string.find(current_file, "\\", pointer) or string.find(current_file, "/", pointer);
+                    
+                    if next_separator then
+                        pointer = next_separator + 1;
+                    else
+                        if pointer > 1 then
+                            current_file = string.sub(current_file, pointer);
+                        end
+                        break;
                     end
-                    break;
                 end
-            end
-            
-            local suffix = string.sub(current_file, string.len(current_file) - 3);
-            
-            if string.lower(suffix) == ".lua" then
-                current_file = string.sub(current_file, 1, string.len(current_file) - 4);
-            end
+                
+                local suffix = string.sub(current_file, string.len(current_file) - 3);
+                
+                if string.lower(suffix) == ".lua" then
+                    current_file = string.sub(current_file, 1, string.len(current_file) - 4);
+                end
 
-            local fileContent = read_file("tables/" .. current_file);
-            for tableName, completeTable in pairs(fileContent) do
-                output("LOADING TABLE:" .. tableName);
-                local convertedTable = convertDataIntoTable(completeTable);
-                if not TABLES[tableName] then
-                    TABLES[tableName] = convertedTable;
-                else
-                    mergeDataTables(TABLES[tableName], convertedTable, completeTable["KEY"][2]);
+                local fileContent = read_file("tables/" .. current_file);
+                for tableName, completeTable in pairs(fileContent) do
+                    output("LOADING TABLE:" .. tableName);
+                    local convertedTable = convertDataIntoTable(completeTable);
+                    if not TABLES[tableName] then
+                        TABLES[tableName] = convertedTable;
+                    else
+                        mergeDataTables(TABLES[tableName], convertedTable, completeTable["KEY"][2]);
+                    end
                 end
             end
-		end
+        end
+        output("FINISHED LOADING TABLES");
+
+        -- local testDataTable = TABLES["TEST_DATA"] --: map<string, map<string, string>>
+        -- output("TEST_DATA");   
+        -- output(testDataTable["One"]["value1"]);
+        -- output(testDataTable["One"]["value2"]);
+        -- output(testDataTable["Two"]["value1"]);
+        -- output(testDataTable["Two"]["value2"]);
+        -- output(testDataTable["Three"]["value1"]);
+        -- output(testDataTable["Three"]["value2"]);
+
+        -- local testDataListTable = TABLES["TEST_DATA_LIST"] --: map<string, vector<map<string, string>>>
+        -- output("TEST_DATA_LIST ONE");    
+        -- local testDataOneRows = testDataListTable["One"];
+        -- for i, datarow in ipairs(testDataOneRows) do
+        --     output(datarow["value1"]);
+        --     output(datarow["value2"]);
+        -- end
+        -- output("TEST_DATA_LIST TWO");        
+        -- local testDataTwoRows = testDataListTable["Two"];
+        -- for i, datarow in ipairs(testDataTwoRows) do
+        --     output(datarow["value1"]);
+        --     output(datarow["value2"]);
+        -- end
+        -- output("TEST_DATA_LIST THREE");        
+        -- local testDataThreeRows = testDataListTable["Three"];
+        -- for i, datarow in ipairs(testDataThreeRows) do
+        --     output(datarow["value1"]);
+        --     output(datarow["value2"]);
+        -- end
+
+        _G.TABLES = TABLES;
     end
-    output("FINISHED LOADING TABLES");
-
-    -- local testDataTable = TABLES["TEST_DATA"] --: map<string, map<string, string>>
-    -- output("TEST_DATA");   
-    -- output(testDataTable["One"]["value1"]);
-    -- output(testDataTable["One"]["value2"]);
-    -- output(testDataTable["Two"]["value1"]);
-    -- output(testDataTable["Two"]["value2"]);
-    -- output(testDataTable["Three"]["value1"]);
-    -- output(testDataTable["Three"]["value2"]);
-
-    -- local testDataListTable = TABLES["TEST_DATA_LIST"] --: map<string, vector<map<string, string>>>
-    -- output("TEST_DATA_LIST ONE");    
-    -- local testDataOneRows = testDataListTable["One"];
-    -- for i, datarow in ipairs(testDataOneRows) do
-    --     output(datarow["value1"]);
-    --     output(datarow["value2"]);
-    -- end
-    -- output("TEST_DATA_LIST TWO");        
-    -- local testDataTwoRows = testDataListTable["Two"];
-    -- for i, datarow in ipairs(testDataTwoRows) do
-    --     output(datarow["value1"]);
-    --     output(datarow["value2"]);
-    -- end
-    -- output("TEST_DATA_LIST THREE");        
-    -- local testDataThreeRows = testDataListTable["Three"];
-    -- for i, datarow in ipairs(testDataThreeRows) do
-    --     output(datarow["value1"]);
-    --     output(datarow["value2"]);
-    -- end
-
-    _G.TABLES = TABLES;
 end
 
 --" -> \\\"
