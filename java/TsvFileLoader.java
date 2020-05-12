@@ -48,8 +48,9 @@ public class TsvFileLoader {
       for(int i = 0; i<lines.size(); i++) {
          String line = lines.get( i );
          if(i == 0) {
-            tsvFile.setTableName( line );
-         } else if(i >= 2) {
+            String[] linesValues = line.split("\t");
+            tsvFile.setTableName( linesValues[0] );
+         } else if(i >= 1) {
             TsvRow tsvRow = convertLineIntoTsvRow(line);
             if(tsvFile.getTsvHeaders() == null) {
                tsvFile.setTsvHeaders(tsvRow);
@@ -70,9 +71,10 @@ public class TsvFileLoader {
    }
    
    private boolean isCaTsvFile(List<String> lines) {
-      String secondLine = lines.get( 1 );
+      String firstLine = lines.get( 0 );
       try {
-         Integer.parseInt( secondLine.trim() );
+         String[] linesValues = firstLine.split("\t");
+         Integer.parseInt( linesValues[1] );
          return true;
       } catch ( NumberFormatException e ) {
          return false;

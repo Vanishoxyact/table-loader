@@ -99,7 +99,9 @@ public class TsvFileConverter extends Application {
             tableConfiguration.setKeyColumn( columnsComboBox.getValue() );
             tableConfiguration.setKeyType( keyTypeComboBox.getValue() );
             tableConfiguration.setTableName( tableNameTextField.getText() );
-            new LuaFileWriter().writeLuaFile( tableConfiguration, new File(tableNameTextField.getText() + ".lua") );
+            File outputFile = new File(tableNameTextField.getText() + ".lua");
+            new LuaFileWriter().writeLuaFile(tableConfiguration, outputFile);
+            System.out.println("Written to: " + outputFile.getAbsolutePath());
          }
       } );
       rootPane.getChildren().add( convertButton );
